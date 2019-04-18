@@ -87,8 +87,8 @@ class Dist_Archive_Command {
 		$version = '';
 		foreach ( glob( $path . '/*.php' ) as $php_file ) {
 			$contents = file_get_contents( $php_file, false, null, 0, 5000 );
-			if ( preg_match( '#\* Version:(.+)#', $contents, $matches ) ) {
-				$version = '.' . trim( $matches[1] );
+			$version = $this->get_version_in_code($contents);
+			if( null !== $version ) {
 				break;
 			}
 		}
@@ -148,5 +148,81 @@ class Dist_Archive_Command {
 			WP_CLI::error( $error );
 		}
 	}
+
+	/**
+	 * Gets the content of a version tag in any doc block in the given source code string
+	 *
+	 * The version tag might be specified as @version x.y.z or Version: x.y.z and it might be preceeded by an *
+	 *
+	 * @param string $code_str the source code string to look into
+	 * @return null|string the version string
+	 */
+
+	private static function get_version_in_code($code_str)
+	{
+        $tokens = array_values(
+            array_filter(
+                token_get_all($code_str),
+                function ($token) {
+                    return !is_array($token) || $token[0] !== T_WHITESPACE;
+                }
+            )
+        );
+        foreach ( $tokens as $token ) {
+			if ( $token[0] == T_DOC_COMMENT	) {
+				$version = self::get_version_in_docblock($token[1]);
+				if ( null !== $version ) {
+					return $version;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the content of a version tag in a docblock
+	 *
+	 * @param string $docblock
+	 * @return null|string The content of the version tag
+	*/
+	private static function get_version_in_docblock($docblock)
+	{
+		$docblocktags = self::parse_doc_block($docblock);
+		if ( isset($docblocktags['version'] ) ) {
+			return $docblocktags['version'];
+		}
+		return null;
+	}
+
+	/**
+	 * Parses a docblock and gets an array of tags with their values
+	 *
+	 * The tags might be specified as @version x.y.z or Version: x.y.z and they might be preceeded by an *
+	 *
+	 * This code is based on the phpactor package, namely:
+	 *    https://github.com/phpactor/docblock/blob/master/lib/Parser.php
+	 *
+	 * @param string $docblock
+	 * @return array
+	*/
+    private static function parse_doc_block($docblock): array
+    {
+		$tag_documentor = '{@([a-zA-Z0-9-_\\\]+)\s*?(.*)?}';
+		$tag_property = '{\s*\*?\s*(.*?)\:(.*)}';
+        $lines = explode(PHP_EOL, $docblock);
+        $tags = [];
+        $prose = [];
+        foreach ($lines as $line) {
+            if (0 === preg_match($tag_documentor, $line, $matches)) {
+				if (0 === preg_match($tag_property, $line, $matches)) {
+					continue;
+				}
+			}
+            $tagName = strtolower($matches[1]);
+            $metadata = trim($matches[2] ?? '');
+            $tags[$tagName] = $metadata;
+        }
+        return $tags;
+    }
 
 }
