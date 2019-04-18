@@ -186,15 +186,15 @@ class Dist_Archive_Command {
 	 */
 	private static function get_version_in_code($code_str)
 	{
-        $tokens = array_values(
-            array_filter(
-                token_get_all($code_str),
-                function ($token) {
-                    return !is_array($token) || $token[0] !== T_WHITESPACE;
-                }
-            )
-        );
-        foreach ( $tokens as $token ) {
+		$tokens = array_values(
+			array_filter(
+				token_get_all($code_str),
+				function ($token) {
+					return !is_array($token) || $token[0] !== T_WHITESPACE;
+				}
+			)
+		);
+		foreach ( $tokens as $token ) {
 			if ( $token[0] == T_DOC_COMMENT	) {
 				$version = self::get_version_in_docblock($token[1]);
 				if ( null !== $version ) {
@@ -235,20 +235,20 @@ class Dist_Archive_Command {
     {
 		$tag_documentor = '{@([a-zA-Z0-9-_\\\]+)\s*?(.*)?}';
 		$tag_property = '{\s*\*?\s*(.*?)\:(.*)}';
-        $lines = explode(PHP_EOL, $docblock);
-        $tags = [];
-        $prose = [];
-        foreach ($lines as $line) {
-            if (0 === preg_match($tag_documentor, $line, $matches)) {
+		$lines = explode(PHP_EOL, $docblock);
+		$tags = [];
+		$prose = [];
+		foreach ($lines as $line) {
+			if (0 === preg_match($tag_documentor, $line, $matches)) {
 				if (0 === preg_match($tag_property, $line, $matches)) {
 					continue;
 				}
 			}
-            $tagName = strtolower($matches[1]);
-            $metadata = trim($matches[2] ?? '');
-            $tags[$tagName] = $metadata;
-        }
-        return $tags;
+			$tagName = strtolower($matches[1]);
+			$metadata = trim($matches[2] ?? '');
+			$tags[$tagName] = $metadata;
+		}
+		return $tags;
     }
 
 }
