@@ -93,7 +93,8 @@ class Dist_Archive_Command {
 		foreach ( glob( $path . '/*.php' ) as $php_file ) {
 			$contents = file_get_contents( $php_file, false, null, 0, 5000 );
 			$version = $this->get_version_in_code($contents);
-			if( null !== $version ) {
+			if( ! empty( $version ) ) {
+				$version = '.' . trim($version);
 				break;
 			}
 		}
