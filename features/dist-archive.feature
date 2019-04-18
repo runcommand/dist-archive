@@ -182,7 +182,7 @@ Feature: Generate a distribution archive of a project
     And the wp-content/plugins/hello-world/.travis.yml file should exist
     And the wp-content/plugins/hello-world/bin directory should exist
 
-    When I run `sed -i wp-content/plugins/hello-world/hello-world.php -e "s/* Version:/Version/" -e "s/0.1.0/0.2.0/"`
+    When I run `sed -i wp-content/plugins/hello-world/hello-world.php -e "s/* Version/Version/" -e "s/0.1.0/0.2.0/"`
     Then STDERR should be empty
 
     When I run `wp dist-archive wp-content/plugins/hello-world`
