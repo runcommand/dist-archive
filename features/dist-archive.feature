@@ -148,3 +148,26 @@ Feature: Generate a distribution archive of a project
       | format  | extension | extract   |
       | zip     | zip       | unzip     |
       | targz   | tar.gz    | tar -zxvf |
+
+  Scenario: Create directories automatically if requested
+    Given a WP install
+
+    When I run `wp scaffold plugin hello-world`
+    Then the wp-content/plugins/hello-world directory should exist
+    And the wp-content/plugins/hello-world/hello-world.php file should exist
+    And the wp-content/plugins/hello-world/.travis.yml file should exist
+    And the wp-content/plugins/hello-world/bin directory should exist
+
+    When I try `wp dist-archive wp-content/plugins/hello-world {RUN_DIR}/some/nested/folder/hello-world.zip`
+    Then STDERR should contain:
+      """
+      Error: Target directory does not exist
+      """
+
+    When I run `wp dist-archive --create-target-dir wp-content/plugins/hello-world {RUN_DIR}/some/nested/folder/hello-world.zip`
+    Then STDOUT should be:
+      """
+      Success: Created hello-world.zip
+      """
+    And STDERR should be empty
+    And the {RUN_DIR}/some/nested/folder/hello-world.zip file should exist

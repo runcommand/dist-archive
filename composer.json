@@ -24,7 +24,12 @@
     "extra": {
         "commands": [
             "dist-archive"
-        ]
+        ],
+        "readme": {
+            "shields": [
+                "[![CircleCI](https://circleci.com/gh/wp-cli/dist-archive-command/tree/master.svg?style=svg)](https://circleci.com/gh/wp-cli/dist-archive-command/tree/master)"
+            ]
+        }
     },
     "autoload": {
         "psr-4": {
