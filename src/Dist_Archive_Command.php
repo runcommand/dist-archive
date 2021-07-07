@@ -25,7 +25,7 @@ class Dist_Archive_Command {
 	 * circle.yml
 	 * ```
 	 *
-	 * Use one distibution archive command for many projects, instead of a bash
+	 * Use one distribution archive command for many projects, instead of a bash
 	 * script in each project.
 	 *
 	 * ## OPTIONS
@@ -38,6 +38,9 @@ class Dist_Archive_Command {
 	 *
 	 * [--create-target-dir]
 	 * : Automatically create the target directory as needed.
+	 *
+	 * [--plugin-dirname=<plugin-slug>]
+	 * : Set the archive extract directory name. Defaults to project directory name.
 	 *
 	 * [--format=<format>]
 	 * : Choose the format for the archive.
@@ -113,6 +116,25 @@ class Dist_Archive_Command {
 			}
 		}
 
+		if ( isset( $assoc_args['plugin-dirname'] ) && rtrim( $assoc_args['plugin-dirname'], '/' ) !== $archive_base ) {
+			$plugin_dirname = rtrim( $assoc_args['plugin-dirname'], '/' );
+			$archive_base   = $plugin_dirname;
+			$tmp_dir        = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $plugin_dirname . $version . '.' . time();
+			$new_path       = $tmp_dir . DIRECTORY_SEPARATOR . $plugin_dirname;
+			mkdir( $new_path, 0777, true );
+			// phpcs:ignore Squiz.PHP.DisallowMultipleAssignments.Found
+			foreach ( $iterator = new \RecursiveIteratorIterator( new \RecursiveDirectoryIterator( $path, \RecursiveDirectoryIterator::SKIP_DOTS ), \RecursiveIteratorIterator::SELF_FIRST ) as $item ) {
+				if ( $item->isDir() ) {
+					mkdir( $new_path . DIRECTORY_SEPARATOR . $iterator->getSubPathName() );
+				} else {
+					copy( $item, $new_path . DIRECTORY_SEPARATOR . $iterator->getSubPathName() );
+				}
+			}
+			$source_path = $new_path;
+		} else {
+			$source_path = $path;
+		}
+
 		if ( is_null( $archive_file ) ) {
 			$archive_file = dirname( $path ) . '/' . $archive_base . $version;
 			if ( 'zip' === $assoc_args['format'] ) {
@@ -122,7 +144,7 @@ class Dist_Archive_Command {
 			}
 		}
 
-		chdir( dirname( $path ) );
+		chdir( dirname( $source_path ) );
 
 		if ( Utils\get_flag_value( $assoc_args, 'create-target-dir' ) ) {
 			$this->maybe_create_directory( $archive_file );
